@@ -20,12 +20,17 @@
 package io.ecocode.java.checks.social.privacy;
 
 import com.google.common.collect.ImmutableList;
+
+import io.ecocode.java.checks.helpers.TreeHelper;
+
 import org.sonar.check.Rule;
 import org.sonar.plugins.java.api.IssuableSubscriptionVisitor;
+import org.sonar.plugins.java.api.JavaFileScanner;
+import org.sonar.plugins.java.api.JavaFileScannerContext;
 import org.sonar.plugins.java.api.semantic.MethodMatchers;
-import org.sonar.plugins.java.api.tree.MethodInvocationTree;
-import org.sonar.plugins.java.api.tree.Tree;
+import org.sonar.plugins.java.api.tree.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,19 +40,20 @@ import java.util.List;
  * information, but it is a first step towards Google Ads and hence this 
  * practice should be discouraged at early stage.
  */
-@Rule(key = "SPRI002", name = "ecocodeGooggleTracker")
-public class GoogleTrackerRule implements JavaFileScanner {
+@Rule(key = "SPRI002", name = "ecocodeGoogleTracker")
+public class GoogleTrackerRule extends BaseTreeVisitor implements JavaFileScanner {
 
     private static final String ERROR_MESSAGE = "It is not necessarily sensitive information, but it is a first step towards Google Ads and hence this practice should be discouraged at early stage.";
-    private static final String METHOD_OWNER_TYPE = "com.google.android.gms.analytics.Tracker";
 
     @Override
     public void scanFile(JavaFileScannerContext context) {
         CompilationUnitTree cut = context.getTree();
 
+        GoogleTrackerImports googleTrackerImport = new GoogleTrackerImports();
+
         for (ImportClauseTree importClauseTree : cut.imports()) {
             ImportTree importTree = null;
-
+            
             if (importClauseTree.is(Tree.Kind.IMPORT)) {
                 importTree = (ImportTree) importClauseTree;
             }
@@ -57,24 +63,38 @@ public class GoogleTrackerRule implements JavaFileScanner {
                 continue;
             }
 
-            bluetoothImports.collectBluetoothImport(importTree);
+            googleTrackerImport.collectBluetoothClassicImport(importTree);
+        }
+
+        handleResult(context, googleTrackerImport);
+        scan(cut);
+    }
+
+    private void handleResult(JavaFileScannerContext context, GoogleTrackerImports googleTrackerImport) {
+        if (googleTrackerImport.hasGoogleTrackerImports()) {
+            for (ImportTree importTree : googleTrackerImport.getGoogleTrackerImports()) {
+                context.reportIssue(this, importTree, ERROR_MESSAGE);
+            }
         }
     }
 
-    private void handleResult(JavaFileScannerContext context, BluetoothImports bluetoothImports) {
-        if (bluetoothImports.hasBluetoothImports()) {
-            if (bluetoothImports.hasBothBluetoothTypeImports()) {
-                for (ImportTree importTree : bluetoothImports.getBluetoothLEImports()) {
-                    context.reportIssue(this, importTree, GOOD_PRACTICE_MESSAGE);
-                }
-            } else if (bluetoothImports.hasBluetoothLEImports()) {
-                for (ImportTree importTree : bluetoothImports.getBluetoothLEImports()) {
-                    context.reportIssue(this, importTree, GOOD_PRACTICE_MESSAGE);
-                }
-            } else {
-                for (ImportTree importTree : bluetoothImports.getBluetoothClassicImports()) {
-                    context.reportIssue(this, importTree, ERROR_MESSAGE);
-                }
+    private class GoogleTrackerImports {
+        private static final String IMPORT_STR_GGL_TRCK = "com.google.android.gms.analytics.Tracker";
+
+        private final List<ImportTree> gglTrListTree = new ArrayList<>();
+
+        public List<ImportTree> getGoogleTrackerImports() {
+            return gglTrListTree;
+        }
+
+        public boolean hasGoogleTrackerImports() {
+            return !gglTrListTree.isEmpty();
+        }
+
+        public void collectBluetoothClassicImport(ImportTree importTree) {
+            String importName = TreeHelper.fullQualifiedName(importTree.qualifiedIdentifier());
+            if (importName.startsWith(IMPORT_STR_GGL_TRCK)) {
+                gglTrListTree.add(importTree);
             }
         }
     }
