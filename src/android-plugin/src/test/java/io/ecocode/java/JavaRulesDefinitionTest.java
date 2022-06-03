@@ -227,6 +227,12 @@ public class JavaRulesDefinitionTest {
         assertThat(thriftyNotification.name()).isEqualTo("Sobriety: Thrifty Notification");
         assertThat(thriftyNotification.debtRemediationFunction().type()).isEqualTo(Type.CONSTANT_ISSUE);
         assertThat(thriftyNotification.type()).isEqualTo(RuleType.CODE_SMELL);
+
+        Rule googleTrackerRule = repository.rule("SPRI002");
+        assertThat(googleTrackerRule).isNotNull();
+        assertThat(googleTrackerRule.name()).isEqualTo("Privacy: Google Tracker");
+        assertThat(googleTrackerRule.debtRemediationFunction().type()).isEqualTo(Type.CONSTANT_ISSUE);
+        assertThat(googleTrackerRule.type()).isEqualTo(RuleType.CODE_SMELL);
     }
 
     private void assertAllRuleParametersHaveDescription(Repository repository) {
