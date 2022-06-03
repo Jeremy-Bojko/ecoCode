@@ -76,6 +76,7 @@ public class GoogleTrackerRule extends BaseTreeVisitor implements JavaFileScanne
 
     private class GoogleTrackerImports {
         private static final String IMPORT_STR_GGL_TRCK = "com.google.android.gms.analytics.Tracker";
+        private static final String IMPORT_STR_FIREBASE_TRCK = "com.google.firebase.analytics";
 
         private final List<ImportTree> gglTrListTree = new ArrayList<>();
 
@@ -89,7 +90,7 @@ public class GoogleTrackerRule extends BaseTreeVisitor implements JavaFileScanne
 
         public void collectBluetoothClassicImport(ImportTree importTree) {
             String importName = TreeHelper.fullQualifiedName(importTree.qualifiedIdentifier());
-            if (importName.startsWith(IMPORT_STR_GGL_TRCK)) {
+            if (importName.startsWith(IMPORT_STR_GGL_TRCK) || importName.startsWith(IMPORT_STR_FIREBASE_TRCK) ) {
                 gglTrListTree.add(importTree);
             }
         }
