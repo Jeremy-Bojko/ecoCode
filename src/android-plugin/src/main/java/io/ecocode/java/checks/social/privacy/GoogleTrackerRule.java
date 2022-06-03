@@ -82,7 +82,7 @@ public class GoogleTrackerRule extends BaseTreeVisitor implements JavaFileScanne
     }
 
     private class GoogleTrackerImports {
-        private static final String IMPORT_STR_GGL_TRCK = "com.google.android.gms.analytics.Tracker";
+        private static final String IMPORT_STR_GGL_TRCK = "com.google.android.gms.analytics";
         private static final String IMPORT_STR_FIREBASE_TRCK = "com.google.firebase.analytics";
 
         private final List<ImportTree> gglTrListTree = new ArrayList<>();
