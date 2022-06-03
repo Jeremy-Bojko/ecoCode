@@ -39,7 +39,8 @@ import java.util.List;
 @Rule(key = "SPRI002", name = "ecocodeGoogleTracker")
 public class GoogleTrackerRule extends BaseTreeVisitor implements JavaFileScanner {
 
-    private static final String ERROR_MESSAGE = "It is not necessarily sensitive information, but it is a first step towards Google Ads and hence this practice should be discouraged at early stage.";
+    private static final String ERROR_MESSAGE_GGL_TRACKER = "Using com.google.android.gms.analytics.Tracker is a potential threat for privacy.";
+    private static final String ERROR_MESSAGE_FIREBASE_TRACKER= "Using com.google.firebase.analytics.* is a potential threat for privacy.";
 
     @Override
     public void scanFile(JavaFileScannerContext context) {
@@ -59,7 +60,7 @@ public class GoogleTrackerRule extends BaseTreeVisitor implements JavaFileScanne
                 continue;
             }
 
-            googleTrackerImport.collectBluetoothClassicImport(importTree);
+            googleTrackerImport.collectTrackerImport(importTree);
         }
 
         handleResult(context, googleTrackerImport);
@@ -67,9 +68,15 @@ public class GoogleTrackerRule extends BaseTreeVisitor implements JavaFileScanne
     }
 
     private void handleResult(JavaFileScannerContext context, GoogleTrackerImports googleTrackerImport) {
-        if (googleTrackerImport.hasGoogleTrackerImports()) {
-            for (ImportTree importTree : googleTrackerImport.getGoogleTrackerImports()) {
-                context.reportIssue(this, importTree, ERROR_MESSAGE);
+        if (googleTrackerImport.hasTrackerImports()) {
+            if(googleTrackerImport.hasGoogleTrackerImports()) {
+                for(ImportTree importTree: googleTrackerImport.getGoogleTrackerImports()) {
+                    context.reportIssue(this, importTree, ERROR_MESSAGE_GGL_TRACKER);
+                }
+            } else if(googleTrackerImport.hasFirebaseTrackerImports()) {
+                for(ImportTree importTree: googleTrackerImport.getFirebaseTrackerImports()) {
+                    context.reportIssue(this, importTree, ERROR_MESSAGE_FIREBASE_TRACKER);
+                }
             }
         }
     }
@@ -79,19 +86,34 @@ public class GoogleTrackerRule extends BaseTreeVisitor implements JavaFileScanne
         private static final String IMPORT_STR_FIREBASE_TRCK = "com.google.firebase.analytics";
 
         private final List<ImportTree> gglTrListTree = new ArrayList<>();
+        private final List<ImportTree> firebaseTrListTree = new ArrayList<>();
 
         public List<ImportTree> getGoogleTrackerImports() {
             return gglTrListTree;
+        }
+
+        public List<ImportTree> getFirebaseTrackerImports() {
+            return firebaseTrListTree;
+        }
+
+        public boolean hasTrackerImports() {
+            return hasGoogleTrackerImports() || hasFirebaseTrackerImports();
         }
 
         public boolean hasGoogleTrackerImports() {
             return !gglTrListTree.isEmpty();
         }
 
-        public void collectBluetoothClassicImport(ImportTree importTree) {
+        public boolean hasFirebaseTrackerImports() {
+            return !firebaseTrListTree.isEmpty();
+        }
+
+        public void collectTrackerImport(ImportTree importTree) {
             String importName = TreeHelper.fullQualifiedName(importTree.qualifiedIdentifier());
-            if (importName.startsWith(IMPORT_STR_GGL_TRCK) || importName.startsWith(IMPORT_STR_FIREBASE_TRCK) ) {
+            if (importName.startsWith(IMPORT_STR_GGL_TRCK)) {
                 gglTrListTree.add(importTree);
+            } else if (importName.startsWith(IMPORT_STR_FIREBASE_TRCK)) {
+                firebaseTrListTree.add(importTree);
             }
         }
     }
