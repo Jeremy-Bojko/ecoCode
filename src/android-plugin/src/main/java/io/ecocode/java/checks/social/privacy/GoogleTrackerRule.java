@@ -19,15 +19,11 @@
  */
 package io.ecocode.java.checks.social.privacy;
 
-import com.google.common.collect.ImmutableList;
-
 import io.ecocode.java.checks.helpers.TreeHelper;
 
 import org.sonar.check.Rule;
-import org.sonar.plugins.java.api.IssuableSubscriptionVisitor;
 import org.sonar.plugins.java.api.JavaFileScanner;
 import org.sonar.plugins.java.api.JavaFileScannerContext;
-import org.sonar.plugins.java.api.semantic.MethodMatchers;
 import org.sonar.plugins.java.api.tree.*;
 
 import java.util.ArrayList;
